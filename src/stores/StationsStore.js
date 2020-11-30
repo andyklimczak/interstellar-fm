@@ -3,13 +3,16 @@ import { makeAutoObservable } from "mobx"
 export default class StationsStore {
     stations = [
         {
-            "name": "Defcon - Somafm",
+            id: '1',
+            name: "Defcon - Somafm",
         },
         {
-            "name": "Liquid DnB - Difm",
+            id: '2',
+            name: "Liquid DnB - Difm",
         },
         {
-            "name": "Classic Music - Sacramento",
+            id: '3',
+            name: "Classic Music - Sacramento",
         },
     ]
     andy = 'andy store'
