@@ -1,17 +1,23 @@
-import React, {useContext} from 'react';
-import {Text, View, StyleSheet, FlatList, Button,} from 'react-native';
+import React, {useContext, useState, useCallback} from 'react';
+import {Text, View, StyleSheet, FlatList, Platform} from 'react-native';
 import {observer} from "mobx-react";
 import {FontAwesome} from '@expo/vector-icons';
-import {Icon} from 'react-native-elements'
+import {Slider} from 'react-native-elements'
+import debounce from 'lodash/debounce'
 
 import {RootStoreContext} from "../../App";
 
 const PlayingInfo = observer(() => {
     const stores = useContext(RootStoreContext)
+    const [volume, setVolume] = useState(stores.radioStore.volume)
     const handleStopRadio = () => {
         console.log('handle stop radio')
         stores.radioStore.stopStation()
     }
+    const handleVolumeChange = useCallback(debounce(vol => {
+        setVolume(vol)
+        stores.radioStore.setVolume(vol)
+    }, 250), [])
     const currentStation = stores.radioStore.playingStation
     if (!currentStation) {
         return null
@@ -26,6 +32,14 @@ const PlayingInfo = observer(() => {
                 onPress={handleStopRadio}
                 size={36}
             />
+            {Platform.OS === 'web' ? (
+                <View style={styles.slider}>
+                    <Slider
+                        value={volume}
+                        onValueChange={handleVolumeChange}
+                    />
+                </View>
+            ) : null}
         </View>
     );
 })
@@ -42,7 +56,11 @@ const styles = StyleSheet.create({
     },
     stationName: {
         marginRight: 15,
-    }
+    },
+    slider: {
+        width: 200,
+        marginLeft: 50,
+    },
 });
 
 export default PlayingInfo

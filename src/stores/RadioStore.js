@@ -6,6 +6,7 @@ import RadioBrowser from "../RadioBrowser";
 export default class RadioStore {
     playingStation = null
     radio = null
+    volume = 1
     rootStore
 
     constructor(rootStore) {
@@ -35,7 +36,11 @@ export default class RadioStore {
         try {
             const {sound, status} = await Audio.Sound.createAsync(
                 {uri: station.url},
-                {shouldPlay: true}
+                {
+                    shouldPlay: true,
+                    volume: this.volume,
+                    progressUpdateIntervalMillis: 500,
+                }
             );
             runInAction(() => {
                 this.radio = sound
@@ -55,7 +60,11 @@ export default class RadioStore {
     async stopStation() {
         try {
             if (this.radio) {
-                await this.radio.stopAsync()
+                const { isLoaded } = await this.radio.getStatusAsync()
+                console.log(await this.radio.getStatusAsync())
+                if (isLoaded) {
+                    await this.radio.stopAsync()
+                }
             }
         } catch (e) {
             console.log('error stopping station', e)
@@ -63,5 +72,13 @@ export default class RadioStore {
         runInAction(() => {
             this.playingStation = null
         })
+    }
+
+    setVolume(vol) {
+        console.log('set vol')
+        if (this.radio) {
+            this.volume = vol
+            this.radio.setVolumeAsync(vol)
+        }
     }
 }

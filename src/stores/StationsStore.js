@@ -13,7 +13,7 @@ export default class StationsStore {
     constructor(rootStore) {
         makeAutoObservable(this)
         this.rootStore = rootStore
-        // this.fetchStations()
+        this.fetchStations()
     }
 
     async fetchStations() {
@@ -33,7 +33,7 @@ export default class StationsStore {
     async saveStations() {
         console.log('save stations', this.stations.length)
         try {
-            // await AsyncStorage.setItem(STATIONS_KEY, JSON.stringify(this.stations))
+            await AsyncStorage.setItem(STATIONS_KEY, JSON.stringify(this.stations))
         } catch (e) {
             console.log('error saving stations')
         }
