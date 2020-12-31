@@ -1,0 +1,38 @@
+{
+  "files": {
+    "app.js": "/interstellar-fm/static/js/app.76970b11.chunk.js",
+    "app.js.map": "/interstellar-fm/static/js/app.76970b11.chunk.js.map",
+    "runtime~app.js": "/interstellar-fm/static/js/runtime~app.199da87b.js",
+    "runtime~app.js.map": "/interstellar-fm/static/js/runtime~app.199da87b.js.map",
+    "static/js/2.01e90f50.chunk.js": "/interstellar-fm/static/js/2.01e90f50.chunk.js",
+    "static/js/2.01e90f50.chunk.js.map": "/interstellar-fm/static/js/2.01e90f50.chunk.js.map",
+    "fonts/AntDesign.ttf": "/interstellar-fm/./fonts/AntDesign.ttf",
+    "fonts/Entypo.ttf": "/interstellar-fm/./fonts/Entypo.ttf",
+    "fonts/Feather.ttf": "/interstellar-fm/./fonts/Feather.ttf",
+    "fonts/FontAwesome.ttf": "/interstellar-fm/./fonts/FontAwesome.ttf",
+    "fonts/FontAwesome5_Brands.ttf": "/interstellar-fm/./fonts/FontAwesome5_Brands.ttf",
+    "fonts/FontAwesome5_Solid.ttf": "/interstellar-fm/./fonts/FontAwesome5_Solid.ttf",
+    "fonts/Fontisto.ttf": "/interstellar-fm/./fonts/Fontisto.ttf",
+    "fonts/Foundation.ttf": "/interstellar-fm/./fonts/Foundation.ttf",
+    "fonts/Ionicons.ttf": "/interstellar-fm/./fonts/Ionicons.ttf",
+    "fonts/MaterialCommunityIcons.ttf": "/interstellar-fm/./fonts/MaterialCommunityIcons.ttf",
+    "fonts/MaterialIcons.ttf": "/interstellar-fm/./fonts/MaterialIcons.ttf",
+    "fonts/SimpleLineIcons.ttf": "/interstellar-fm/./fonts/SimpleLineIcons.ttf",
+    "favicon-16.png": "/interstellar-fm/favicon-16.png",
+    "favicon-32.png": "/interstellar-fm/favicon-32.png",
+    "favicon.ico": "/interstellar-fm/favicon.ico",
+    "index.html": "/interstellar-fm/index.html",
+    "manifest.json": "/interstellar-fm/manifest.json",
+    "serve.json": "/interstellar-fm/serve.json",
+    "static/js/2.01e90f50.chunk.js.LICENSE.txt": "/interstellar-fm/static/js/2.01e90f50.chunk.js.LICENSE.txt",
+    "static/media/bell.png": "/interstellar-fm/static/media/bell.cf04af27.png",
+    "static/media/heart.png": "/interstellar-fm/static/media/heart.23b5c2c0.png",
+    "static/media/rocket.png": "/interstellar-fm/static/media/rocket.d2f3bf41.png",
+    "static/media/star.png": "/interstellar-fm/static/media/star.69c71386.png"
+  },
+  "entrypoints": [
+    "static/js/runtime~app.199da87b.js",
+    "static/js/2.01e90f50.chunk.js",
+    "static/js/app.76970b11.chunk.js"
+  ]
+}
