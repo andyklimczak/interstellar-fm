@@ -1,7 +1,7 @@
 {
   "files": {
-    "app.js": "/interstellar-fm/static/js/app.1662e422.chunk.js",
-    "app.js.map": "/interstellar-fm/static/js/app.1662e422.chunk.js.map",
+    "app.js": "/interstellar-fm/static/js/app.97e6f4a2.chunk.js",
+    "app.js.map": "/interstellar-fm/static/js/app.97e6f4a2.chunk.js.map",
     "runtime~app.js": "/interstellar-fm/static/js/runtime~app.199da87b.js",
     "runtime~app.js.map": "/interstellar-fm/static/js/runtime~app.199da87b.js.map",
     "static/js/2.a1bbf8f7.chunk.js": "/interstellar-fm/static/js/2.a1bbf8f7.chunk.js",
@@ -33,6 +33,6 @@
   "entrypoints": [
     "static/js/runtime~app.199da87b.js",
     "static/js/2.a1bbf8f7.chunk.js",
-    "static/js/app.1662e422.chunk.js"
+    "static/js/app.97e6f4a2.chunk.js"
   ]
 }
