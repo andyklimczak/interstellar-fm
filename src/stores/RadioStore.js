@@ -38,6 +38,7 @@ export default class RadioStore {
                 {uri: station.url},
                 {
                     shouldPlay: true,
+                    isLooping: false,
                     volume: this.volume,
                     progressUpdateIntervalMillis: 500,
                 }
