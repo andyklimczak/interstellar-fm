@@ -37,6 +37,16 @@ const PlayingInfo = observer(() => {
                     <Slider
                         value={volume}
                         onValueChange={handleVolumeChange}
+                        allowTouchTrack={true}
+                        thumbStyle={{
+                            height: 20,
+                            width: 20,
+                        }}
+                        thumbTouchSize={{
+                            height: 20,
+                            width: 20,
+                        }}
+                        thumbTintColor='#674AB3'
                     />
                 </View>
             ) : null}
@@ -52,7 +62,7 @@ const styles = StyleSheet.create({
         // flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        // alignContent: 'space-around',
+        // alignContent: 'space-between',
     },
     stationName: {
         marginRight: 15,
