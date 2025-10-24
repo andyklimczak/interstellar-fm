@@ -1,35 +1,80 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { withLayoutContext } from 'expo-router';
+import { useTheme } from '@react-navigation/native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { BottomPlayer } from '@/components/radio/BottomPlayer';
+import { useRadio } from '@/contexts/radio-context';
+
+const { Navigator } = createMaterialTopTabNavigator();
+const Tabs = withLayoutContext(Navigator);
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colors } = useTheme();
+  const { isHydrated } = useRadio();
+
+  if (!isHydrated) {
+    return (
+      <SafeAreaView
+        edges={['top', 'left', 'right']}
+        style={[styles.safeArea, { backgroundColor: colors.background }]}
+      >
+        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+    <SafeAreaView
+      edges={['top', 'left', 'right']}
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
+      <View style={styles.container}>
+        <View style={styles.tabsWrapper}>
+          <Tabs
+            screenOptions={{
+              tabBarActiveTintColor: colors.text,
+              tabBarInactiveTintColor: `${colors.text}99`,
+              tabBarIndicatorStyle: { backgroundColor: colors.primary, height: 3, borderRadius: 3 },
+              tabBarStyle: {
+                backgroundColor: 'transparent',
+                elevation: 0,
+                shadowOpacity: 0,
+              },
+              tabBarLabelStyle: {
+                fontSize: 16,
+                fontWeight: '600',
+                textTransform: 'none',
+              },
+              tabBarPressColor: `${colors.primary}33`,
+            }}
+          >
+            <Tabs.Screen name="saved" options={{ title: 'Saved' }} />
+            <Tabs.Screen name="search" options={{ title: 'Search' }} />
+          </Tabs>
+        </View>
+        <BottomPlayer />
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+  tabsWrapper: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
