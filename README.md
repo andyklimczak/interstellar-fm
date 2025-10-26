@@ -1,50 +1,51 @@
-# Welcome to your Expo app 👋
+# Interstellar FM
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Interstellar FM is an Expo / React Native app for discovering and streaming internet radio. It features a saved-stations library, fast search backed by [radio-browser.info](https://api.radio-browser.info/), and a persistent mini player that keeps streams going in the background.
 
-## Get started
+## Requirements
+- Node.js 18 or newer (Node 20 recommended)
+- npm (comes with Node)
+- Expo CLI (installed automatically via `npx` when running scripts)
 
-1. Install dependencies
-
+## Local Development
+1. Install dependencies:
    ```bash
    npm install
    ```
-
-2. Start the app
-
+2. Run the app:
    ```bash
-   npx expo start
+   npm start
    ```
+   Choose iOS, Android, or Web from the Expo dev tools to launch the app.
 
-In the output, you'll find options to open the app in a
+Key directories:
+- `app/(tabs)` – file-based routes for Saved and Search tabs.
+- `components/radio` – UI pieces for station cards, tabs, and the bottom player.
+- `contexts/radio-context.tsx` – global audio/state provider powered by `expo-audio`.
+- `lib/radio-browser.ts` – Radio Browser API client and helpers.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+## Testing & Linting
 ```bash
-npm run reset-project
+npm run lint
+npm test -- --runInBand
 ```
+Tests use Jest with React Native Testing Library (`components/radio/__tests__`). Mock utilities live under `test/test-utils.tsx`.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Deploying the Web Build
+- Static export: `npm run build:web` (outputs to `dist/`).
+- GitHub Pages deployment runs automatically via `.github/workflows/deploy-web.yml` when pushing to `master`.
 
-## Learn more
+## Store Readiness
+- `app.json` includes placeholder bundle identifiers (`com.interstellarfm.app`) and background audio settings (iOS `UIBackgroundModes: ["audio"]`, Android foreground service permissions). Update identifiers, app icons, splash art, and metadata before submitting to the App Store / Play Store.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Environment & Production Notes
+- Radio search relies on the public Radio Browser API; if you deploy to production, consider caching results or selecting a preferred mirror.
+- Background playback uses `expo-audio` with a shared `AudioPlayer`. Confirm behavior on physical devices before shipping.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Contributing
+1. Fork & clone the repo.
+2. Create a feature branch.
+3. Run lint/tests before pushing.
+4. Open a pull request describing the change.
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Happy listening! 🎧

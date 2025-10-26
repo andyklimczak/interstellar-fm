@@ -1,29 +1,82 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Tomorrow color palettes (light and night variants).
  */
 
+import { DarkTheme as NavigationDarkTheme, DefaultTheme as NavigationDefaultTheme, Theme } from '@react-navigation/native';
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+export const lightPalette = {
+  background: '#ffffff',
+  currentLine: '#efefef',
+  selection: '#d6d6d6',
+  foreground: '#4d4d4c',
+  comment: '#8e908c',
+  red: '#c82829',
+  orange: '#f5871f',
+  yellow: '#eab700',
+  green: '#718c00',
+  aqua: '#3e999f',
+  blue: '#4271ae',
+  purple: '#8959a8',
+};
+
+export const darkPalette = {
+  background: '#2d2d2d',
+  currentLine: '#393939',
+  selection: '#515151',
+  foreground: '#cccccc',
+  comment: '#999999',
+  red: '#f2777a',
+  orange: '#f99157',
+  yellow: '#ffcc66',
+  green: '#99cc99',
+  aqua: '#66cccc',
+  blue: '#6699cc',
+  purple: '#cc99cc',
+};
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: lightPalette.foreground,
+    background: lightPalette.background,
+    tint: lightPalette.blue,
+    icon: lightPalette.comment,
+    tabIconDefault: lightPalette.comment,
+    tabIconSelected: lightPalette.blue,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: darkPalette.foreground,
+    background: darkPalette.background,
+    tint: darkPalette.aqua,
+    icon: darkPalette.comment,
+    tabIconDefault: darkPalette.comment,
+    tabIconSelected: darkPalette.aqua,
+  },
+};
+
+export const TomorrowLightTheme: Theme = {
+  ...NavigationDefaultTheme,
+  colors: {
+    ...NavigationDefaultTheme.colors,
+    primary: lightPalette.blue,
+    background: lightPalette.background,
+    card: '#ffffff',
+    text: lightPalette.foreground,
+    border: lightPalette.selection,
+    notification: lightPalette.red,
+  },
+};
+
+export const TomorrowDarkTheme: Theme = {
+  ...NavigationDarkTheme,
+  colors: {
+    ...NavigationDarkTheme.colors,
+    primary: darkPalette.aqua,
+    background: darkPalette.background,
+    card: darkPalette.currentLine,
+    text: darkPalette.foreground,
+    border: darkPalette.selection,
+    notification: darkPalette.orange,
   },
 };
 
