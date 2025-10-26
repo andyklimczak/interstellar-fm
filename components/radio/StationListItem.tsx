@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -28,6 +28,8 @@ const hasPlayableArtwork = (uri?: string | null) => {
 
 export const StationListItem = ({ station, onPlay, onToggleSave, isSaved, isActive }: Props) => {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 420;
   const displayTags = useMemo(() => {
     if (!station.tags) {
       return null;
@@ -49,15 +51,13 @@ export const StationListItem = ({ station, onPlay, onToggleSave, isSaved, isActi
       ? `${station.votes.toLocaleString()} votes`
       : null;
 
-  const subtitle = [
-    station.country,
-    station.language,
-    station.bitrate ? `${station.bitrate} kbps` : null,
-    clickCountDisplay,
-    voteDisplay,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const primaryInfo = station.country;
+  const technicalItems = [station.language, station.bitrate ? `${station.bitrate} kbps` : null].filter(
+    Boolean,
+  );
+  const engagementItems = [clickCountDisplay, voteDisplay].filter(Boolean);
+  const secondaryItems = [...technicalItems, ...engagementItems];
+  const subtitle = [primaryInfo, ...secondaryItems].filter(Boolean).join(' · ');
 
   return (
     <Pressable
@@ -82,10 +82,36 @@ export const StationListItem = ({ station, onPlay, onToggleSave, isSaved, isActi
         <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
           {station.name}
         </Text>
-        {!!subtitle && (
-          <Text numberOfLines={1} style={[styles.subtitle, { color: colors.text }]}>
-            {subtitle}
-          </Text>
+        {isCompact ? (
+          <>
+            {!!primaryInfo && (
+              <Text numberOfLines={1} style={[styles.subtitle, { color: colors.text }]}>
+                {primaryInfo}
+              </Text>
+            )}
+            {technicalItems.length > 0 && (
+              <Text
+                numberOfLines={1}
+                style={[styles.subtitle, styles.secondarySubtitle, { color: colors.text }]}
+              >
+                {technicalItems.join(' · ')}
+              </Text>
+            )}
+            {engagementItems.length > 0 && (
+              <Text
+                numberOfLines={1}
+                style={[styles.subtitle, styles.engagementSubtitle, { color: colors.text }]}
+              >
+                {engagementItems.join(' · ')}
+              </Text>
+            )}
+          </>
+        ) : (
+          !!subtitle && (
+            <Text numberOfLines={1} style={[styles.subtitle, { color: colors.text }]}>
+              {subtitle}
+            </Text>
+          )
         )}
         {!!displayTags && (
           <Text numberOfLines={1} style={[styles.tags, { color: colors.text }]}>
@@ -94,11 +120,6 @@ export const StationListItem = ({ station, onPlay, onToggleSave, isSaved, isActi
         )}
       </View>
       <View style={styles.actions}>
-        {isActive && (
-          <View style={styles.equalizer}>
-            <Ionicons name="musical-notes" size={16} color={colors.primary} />
-          </View>
-        )}
         <Pressable onPress={onToggleSave} hitSlop={8} style={styles.iconButton}>
           <Ionicons
             name={isSaved ? 'heart' : 'heart-outline'}
@@ -108,7 +129,7 @@ export const StationListItem = ({ station, onPlay, onToggleSave, isSaved, isActi
         </Pressable>
         <Pressable onPress={onPlay} hitSlop={8} style={styles.iconButton}>
           <Ionicons
-            name={isActive ? 'pause' : 'play'}
+            name={isActive ? 'musical-notes' : 'play'}
             size={22}
             color={isActive ? colors.primary : colors.text}
           />
@@ -167,6 +188,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     opacity: 0.7,
   },
+  secondarySubtitle: {
+    marginTop: 2,
+    opacity: 0.6,
+  },
+  engagementSubtitle: {
+    marginTop: 2,
+    opacity: 0.5,
+  },
   tags: {
     fontSize: 12,
     opacity: 0.6,
@@ -178,8 +207,5 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 4,
-  },
-  equalizer: {
-    marginRight: 4,
   },
 });

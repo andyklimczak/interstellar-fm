@@ -23,6 +23,7 @@ import { Station } from '@/types/radio';
 const STORAGE_KEY = '@interstellar-fm/saved-stations';
 const RECENT_STORAGE_KEY = '@interstellar-fm/recent-stations';
 const RECENT_STATION_LIMIT = 30;
+const VOLUME_STORAGE_KEY = '@interstellar-fm/volume';
 
 type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused';
 
@@ -86,6 +87,31 @@ const persistRecentStations = async (stations: Station[]) => {
     await AsyncStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(stations));
   } catch (error) {
     console.warn('Failed to persist recent stations', error);
+  }
+};
+
+const loadVolume = async (): Promise<number> => {
+  try {
+    const raw = await AsyncStorage.getItem(VOLUME_STORAGE_KEY);
+    if (!raw) {
+      return 1;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) {
+      return 1;
+    }
+    return Math.min(1, Math.max(0, parsed));
+  } catch (error) {
+    console.warn('Failed to load volume setting', error);
+    return 1;
+  }
+};
+
+const persistVolume = async (value: number) => {
+  try {
+    await AsyncStorage.setItem(VOLUME_STORAGE_KEY, value.toString());
+  } catch (error) {
+    console.warn('Failed to persist volume setting', error);
   }
 };
 
@@ -167,10 +193,22 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
     let isCancelled = false;
     const hydrate = async () => {
       try {
-        const [saved, recent] = await Promise.all([loadSavedStations(), loadRecentStations()]);
+        const [saved, recent, storedVolume] = await Promise.all([
+          loadSavedStations(),
+          loadRecentStations(),
+          loadVolume(),
+        ]);
         if (!isCancelled) {
           setSavedStations(saved);
           setRecentStations(recent);
+          setVolumeState(storedVolume);
+          if (playerRef.current) {
+            try {
+              playerRef.current.volume = storedVolume;
+            } catch (error) {
+              console.warn('Failed to apply stored volume to player', error);
+            }
+          }
         }
       } finally {
         if (!isCancelled) {
@@ -296,6 +334,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
     async (value: number) => {
       const nextVolume = Math.min(1, Math.max(0, value));
       setVolumeState(nextVolume);
+      void persistVolume(nextVolume);
 
       if (playerRef.current) {
         try {

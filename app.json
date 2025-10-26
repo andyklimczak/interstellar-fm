@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.interstellarfm.app",
+      "buildNumber": "1.0.1",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
