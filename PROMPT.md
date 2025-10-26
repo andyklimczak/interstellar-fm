@@ -10,8 +10,8 @@ Build a mobile-friendly radio player that lets users:
 - Stream reliably with simple playback controls (play/pause/stop, volume).
 
 ## How It Works
-- **UI shell**: Expo Router drives a material top-tab layout (`app/(tabs)/_layout.tsx`) that surfaces the **Saved** and **Search** stacks, while `/` redirects to `/saved`. `BottomPlayer` sits under the tabs so playback controls are always accessible.
-- **State & playback**: `contexts/radio-context.tsx` wraps the tree, combining AsyncStorage for saved stations and `expo-audio` for streaming via a shared `AudioPlayer`. It exposes helpers like `playStation`, `togglePlayPause`, `stop`, and `setVolume`.
+- **UI shell**: Expo Router drives a material top-tab layout (`app/(tabs)/_layout.tsx`) that surfaces the **Saved**, **Recent**, and **Search** stacks, while `/` redirects to `/saved`. `BottomPlayer` sits under the tabs so playback controls are always accessible.
+- **State & playback**: `contexts/radio-context.tsx` wraps the tree, combining AsyncStorage for saved stations and recent history plus `expo-audio` for streaming via a shared `AudioPlayer`. It exposes helpers like `playStation`, `togglePlayPause`, `stop`, and `setVolume`.
 - **Radio Browser integration**: `lib/radio-browser.ts` centralizes API access. It handles host failover, sets a consistent user agent (native only), offers:
   - `searchStations` (with optional sort and limit),
   - `fetchTopStations` for popular lists,
@@ -19,6 +19,7 @@ Build a mobile-friendly radio player that lets users:
 - **Data structures**: `types/radio.ts` defines the shared `Station` shape used across the app.
 - **Screens/components**:
   - `SavedStationsTab` renders saved favourites, reading from the context.
+  - `RecentStationsTab` lists the most recently played stations (deduplicated, newest first).
   - `SearchStationsTab` fetches trending (`fetchTopStations`) by default and switches to query results, with order chips for name, click count, votes, and bitrate.
   - `BottomPlayer` (components/radio) shows current station info with stop/play and slider volume control.
   - `StationListItem` is a reusable card used by both tabs.

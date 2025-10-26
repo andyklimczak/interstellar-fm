@@ -53,6 +53,7 @@ export default function TabLayout() {
             }}
           >
             <Tabs.Screen name="saved" options={{ title: 'Saved' }} />
+            <Tabs.Screen name="recent" options={{ title: 'Recent' }} />
             <Tabs.Screen name="search" options={{ title: 'Search' }} />
           </Tabs>
         </View>

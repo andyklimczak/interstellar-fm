@@ -21,12 +21,15 @@ import { registerStationClick } from '@/lib/radio-browser';
 import { Station } from '@/types/radio';
 
 const STORAGE_KEY = '@interstellar-fm/saved-stations';
+const RECENT_STORAGE_KEY = '@interstellar-fm/recent-stations';
+const RECENT_STATION_LIMIT = 30;
 
 type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused';
 
 interface RadioContextValue {
   currentStation: Station | null;
   savedStations: Station[];
+  recentStations: Station[];
   isHydrated: boolean;
   status: PlaybackStatus;
   volume: number;
@@ -64,6 +67,28 @@ const persistStations = async (stations: Station[]) => {
   }
 };
 
+const loadRecentStations = async (): Promise<Station[]> => {
+  try {
+    const raw = await AsyncStorage.getItem(RECENT_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+    const parsed = JSON.parse(raw) as Station[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Failed to load recent stations', error);
+    return [];
+  }
+};
+
+const persistRecentStations = async (stations: Station[]) => {
+  try {
+    await AsyncStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(stations));
+  } catch (error) {
+    console.warn('Failed to persist recent stations', error);
+  }
+};
+
 const configureAudio = async () => {
   try {
     await setAudioModeAsync({
@@ -83,6 +108,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
   const playerRef = useRef<AudioPlayer | null>(null);
   const playerSubscriptionRef = useRef<{ remove: () => void } | null>(null);
   const [savedStations, setSavedStations] = useState<Station[]>([]);
+  const [recentStations, setRecentStations] = useState<Station[]>([]);
   const [currentStation, setCurrentStation] = useState<Station | null>(null);
   const [status, setStatus] = useState<PlaybackStatus>('idle');
   const [isBusy, setIsBusy] = useState(false);
@@ -141,9 +167,10 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
     let isCancelled = false;
     const hydrate = async () => {
       try {
-        const stations = await loadSavedStations();
+        const [saved, recent] = await Promise.all([loadSavedStations(), loadRecentStations()]);
         if (!isCancelled) {
-          setSavedStations(stations);
+          setSavedStations(saved);
+          setRecentStations(recent);
         }
       } finally {
         if (!isCancelled) {
@@ -160,6 +187,15 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
       setStatus('idle');
     };
   }, [detachPlayer]);
+
+  const recordRecentStation = useCallback((station: Station) => {
+    setRecentStations((prev) => {
+      const next = [station, ...prev.filter((item) => item.stationuuid !== station.stationuuid)];
+      const limited = next.slice(0, RECENT_STATION_LIMIT);
+      void persistRecentStations(limited);
+      return limited;
+    });
+  }, []);
 
   const playStation = useCallback(
     async (station: Station) => {
@@ -180,6 +216,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
           setIsBusy(false);
         }
         void registerStationClick(station.stationuuid);
+        recordRecentStation(station);
         return;
       }
 
@@ -195,6 +232,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
         setCurrentStation(station);
         player.play();
         void registerStationClick(station.stationuuid);
+        recordRecentStation(station);
       } catch (error) {
         console.error('Failed to start playback', error);
         Alert.alert('Playback failed', 'Unable to start this stream right now.');
@@ -205,7 +243,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
         setIsBusy(false);
       }
     },
-    [attachStatusListener, currentStation?.stationuuid, detachPlayer, volume],
+    [attachStatusListener, currentStation?.stationuuid, detachPlayer, recordRecentStation, volume],
   );
 
   const togglePlayPause = useCallback(async () => {
@@ -302,6 +340,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
     () => ({
       currentStation,
       savedStations,
+      recentStations,
       isHydrated,
       status,
       volume,
@@ -317,6 +356,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
     [
       currentStation,
       savedStations,
+      recentStations,
       isHydrated,
       status,
       volume,

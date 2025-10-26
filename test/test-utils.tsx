@@ -12,6 +12,7 @@ const createBaseContextValue = (
 ): React.ContextType<typeof RadioContext> => ({
   currentStation: null,
   savedStations: [],
+  recentStations: [],
   isHydrated: true,
   status: 'idle',
   volume: 1,
