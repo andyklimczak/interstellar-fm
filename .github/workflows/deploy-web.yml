@@ -37,6 +37,9 @@ jobs:
       - name: Run tests
         run: npm test -- --runInBand
 
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
       - name: Build web bundle
         run: npm run build:web
 
