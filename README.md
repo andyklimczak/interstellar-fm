@@ -40,7 +40,7 @@ Tests use Jest with React Native Testing Library (`components/radio/__tests__`).
 
 ## Environment & Production Notes
 - Radio search relies on the public Radio Browser API; if you deploy to production, consider caching results or selecting a preferred mirror.
-- Background playback uses `expo-audio` with a shared `AudioPlayer`. Confirm behavior on physical devices before shipping.
+- Background playback uses `expo-audio` with a shared `AudioPlayer`, including iOS lock-screen metadata/controls so the current station shows up while the device is sleeping. Confirm behavior on physical devices before shipping.
 
 ## Contributing
 1. Fork & clone the repo.

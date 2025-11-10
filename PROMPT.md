@@ -11,7 +11,7 @@ Build a mobile-friendly radio player that lets users:
 
 ## How It Works
 - **UI shell**: Expo Router drives a material top-tab layout (`app/(tabs)/_layout.tsx`) that surfaces the **Saved**, **Recent**, and **Search** stacks, while `/` redirects to `/saved`. `BottomPlayer` sits under the tabs so playback controls are always accessible.
-- **State & playback**: `contexts/radio-context.tsx` wraps the tree, combining AsyncStorage for saved stations, recent history, and the last-used volume plus `expo-audio` for streaming via a shared `AudioPlayer`. It exposes helpers like `playStation`, `togglePlayPause`, `stop`, and `setVolume`.
+- **State & playback**: `contexts/radio-context.tsx` wraps the tree, combining AsyncStorage for saved stations, recent history, and the last-used volume plus `expo-audio` for streaming via a shared `AudioPlayer`. It wires up iOS/Android lock-screen metadata & controls so the current station shows up system-wide, and exposes helpers like `playStation`, `togglePlayPause`, `stop`, and `setVolume`.
 - **Radio Browser integration**: `lib/radio-browser.ts` centralizes API access. It handles host failover, sets a consistent user agent (native only), offers:
   - `searchStations` (with optional sort and limit),
   - `fetchTopStations` for popular lists,

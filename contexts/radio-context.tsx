@@ -12,6 +12,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createAudioPlayer,
   setAudioModeAsync,
+  type AudioLockScreenOptions,
+  type AudioMetadata,
   type AudioPlayer,
   type AudioStatus,
 } from 'expo-audio';
@@ -24,6 +26,10 @@ const STORAGE_KEY = '@interstellar-fm/saved-stations';
 const RECENT_STORAGE_KEY = '@interstellar-fm/recent-stations';
 const RECENT_STATION_LIMIT = 30;
 const VOLUME_STORAGE_KEY = '@interstellar-fm/volume';
+const LOCK_SCREEN_OPTIONS: AudioLockScreenOptions = {
+  showSeekBackward: false,
+  showSeekForward: false,
+};
 
 type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused';
 
@@ -115,6 +121,17 @@ const persistVolume = async (value: number) => {
   }
 };
 
+const buildLockScreenMetadata = (station: Station): AudioMetadata => {
+  const artist = station.country?.trim() || station.language?.trim() || station.tags?.trim() || undefined;
+
+  return {
+    title: station.name,
+    artist,
+    albumTitle: 'Interstellar FM',
+    artworkUrl: station.favicon?.trim() || undefined,
+  };
+};
+
 const configureAudio = async () => {
   try {
     await setAudioModeAsync({
@@ -141,10 +158,58 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
   const [volume, setVolumeState] = useState(1);
   const [isHydrated, setIsHydrated] = useState(false);
 
+  const activateLockScreenControls = useCallback((player: AudioPlayer, station: Station) => {
+    if (typeof player.setActiveForLockScreen !== 'function') {
+      return;
+    }
+
+    try {
+      player.setActiveForLockScreen(true, buildLockScreenMetadata(station), LOCK_SCREEN_OPTIONS);
+    } catch (error) {
+      console.warn('Failed to enable lock screen controls', error);
+    }
+  }, []);
+
+  const refreshLockScreenMetadata = useCallback(
+    (station: Station | null) => {
+      const player = playerRef.current;
+      if (!station || !player || typeof player.updateLockScreenMetadata !== 'function') {
+        return;
+      }
+
+      try {
+        player.updateLockScreenMetadata(buildLockScreenMetadata(station));
+      } catch (error) {
+        console.warn('Failed to update lock screen metadata', error);
+      }
+    },
+    [],
+  );
+
+  const clearLockScreenControls = useCallback(
+    (player: AudioPlayer | null = playerRef.current) => {
+      if (!player) {
+        return;
+      }
+
+      try {
+        if (typeof player.clearLockScreenControls === 'function') {
+          player.clearLockScreenControls();
+        } else if (typeof player.setActiveForLockScreen === 'function') {
+          player.setActiveForLockScreen(false);
+        }
+      } catch (error) {
+        console.warn('Failed to clear lock screen controls', error);
+      }
+    },
+    [],
+  );
+
   const detachPlayer = useCallback(() => {
     playerSubscriptionRef.current?.remove?.();
     playerSubscriptionRef.current = null;
     if (playerRef.current) {
+      clearLockScreenControls(playerRef.current);
       try {
         playerRef.current.pause();
       } catch {
@@ -157,7 +222,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
       }
       playerRef.current = null;
     }
-  }, []);
+  }, [clearLockScreenControls]);
 
   const handleStatusUpdate = useCallback((playbackStatus: AudioStatus) => {
     if (!playbackStatus.isLoaded) {
@@ -226,6 +291,12 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
     };
   }, [detachPlayer]);
 
+  useEffect(() => {
+    if (currentStation) {
+      refreshLockScreenMetadata(currentStation);
+    }
+  }, [currentStation, refreshLockScreenMetadata]);
+
   const recordRecentStation = useCallback((station: Station) => {
     setRecentStations((prev) => {
       const next = [station, ...prev.filter((item) => item.stationuuid !== station.stationuuid)];
@@ -247,6 +318,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
           setIsBusy(true);
           playerRef.current.play();
           setStatus('playing');
+          activateLockScreenControls(playerRef.current, station);
         } catch (error) {
           Alert.alert('Playback failed', 'Unable to resume this station.');
           console.warn('Failed to resume playback', error);
@@ -269,6 +341,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
         playerRef.current = player;
         setCurrentStation(station);
         player.play();
+        activateLockScreenControls(player, station);
         void registerStationClick(station.stationuuid);
         recordRecentStation(station);
       } catch (error) {
@@ -281,7 +354,14 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
         setIsBusy(false);
       }
     },
-    [attachStatusListener, currentStation?.stationuuid, detachPlayer, recordRecentStation, volume],
+    [
+      activateLockScreenControls,
+      attachStatusListener,
+      currentStation?.stationuuid,
+      detachPlayer,
+      recordRecentStation,
+      volume,
+    ],
   );
 
   const togglePlayPause = useCallback(async () => {
