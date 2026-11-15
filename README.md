@@ -70,7 +70,30 @@ A plain `npm run build:web` exports for the domain root. For a user site or cust
 - React, React DOM, and React Server Components are pinned to the patched **19.3.1** release. React/React DOM are excluded from Expo's exact-version check because SDK 58's bundled recommendation is the vulnerable 19.3.0 release.
 - `glob` and modern `minimatch` transitive dependencies are overridden to patched releases; the build, lint, unit tests, browser tests, and Expo Doctor validate these overrides. Remove the overrides when upstream packages adopt fixed versions.
 - `npm audit` currently reports only low-severity findings caused by Jest's transitive `deepmerge` dependency, for which no patched release is available. Do not run `npm audit fix --force`: it proposes downgrading the toolchain. `npm audit --omit=dev` checks the production dependency tree separately.
-- Dependabot groups the Expo/React Native stack. Its auto-merge workflow requires lint, types, tests, and the web build, not just lint.
+- Dependabot checks npm and GitHub Actions every Monday at 09:00 UTC, groups routine updates, and groups npm security fixes separately. SDK migrations and incompatible compiler/linter majors remain deliberate manual upgrades; security fixes and compatible patches are not disabled.
+- CI and deployment both run `npx expo install --check` to reject unsupported native dependency combinations. Routine dependency PRs must also pass lint, types, unit tests, the production export, and browser tests before merging.
+
+### Dependabot automatic squash merges
+
+`.github/workflows/dependabot.yml` uses the same **`DEPENDABOT_AUTOMERGE_PAT`** secret name as `andy-django-boilerplate`. Verified Dependabot PRs from this repository are approved and queued for squash auto-merge only for **minor/patch** updates. Major or unclassified updates require manual review. Auto-merge never bypasses required CI.
+
+The workflow uses `pull_request_target` so its definition comes from the trusted default branch. It never checks out PR code, installs PR dependencies, or runs PR scripts with the token. All code validation runs separately in the unprivileged CI workflow.
+
+Repository settings required (configured for this repository):
+
+- **Allow auto-merge** and **squash merging** enabled.
+- `master` requires the GitHub Actions **`validate`** check and an up-to-date branch before merging. This protects the complete CI job, including browser tests.
+
+To finish token setup, create a fine-grained PAT restricted to this repository with **Contents: read/write**, **Pull requests: read/write**, and **Workflows: read/write** (needed for GitHub Actions update PRs). A classic PAT instead needs `repo` and `workflow` scopes. Use a dedicated automation account if desired, and set an expiration/rotation reminder. Merges use a PAT rather than `GITHUB_TOKEN` so they trigger the subsequent CI and Pages deployment.
+
+Store the value under **Settings → Secrets and variables → Actions** and also under **Dependabot** with the same name, so it is available for Dependabot-triggered runs. Do not put it in `.env`, commit it, or paste it into chat. The CLI can prompt for it without printing it:
+
+```bash
+gh secret set DEPENDABOT_AUTOMERGE_PAT --repo andyklimczak/interstellar-fm
+gh secret set DEPENDABOT_AUTOMERGE_PAT --app dependabot --repo andyklimczak/interstellar-fm
+```
+
+Until the secret is present, the workflow logs a setup warning and leaves PRs for manual review. A normal `GITHUB_TOKEN` fallback is intentionally not used. After setting/rotating the secret, re-run the auto-merge workflow for an eligible PR if needed.
 
 ## Runtime and native release notes
 

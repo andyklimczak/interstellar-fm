@@ -1,20 +1,91 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "daily"
-    open-pull-requests-limit: 10
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    versioning-strategy: increase-if-necessary
     groups:
+      # Security fixes are separate from routine version updates.
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      # Keep the SDK, React, native modules, and renderer/test stack together.
       expo-and-react-native:
+        applies-to: version-updates
         patterns:
           - "expo*"
           - "@expo/*"
-          - "react*"
+          - "eslint-config-expo"
+          - "react"
+          - "react-dom"
+          - "react-server-dom-webpack"
+          - "react-native*"
           - "@react-native*/*"
           - "@types/react*"
           - "jest-expo"
-  - package-ecosystem: "github-actions"
-    directory: "/"
+          - "test-renderer"
+          - "@testing-library/react-native"
+        update-types: [minor, patch]
+      development-tools:
+        dependency-type: development
+        update-types: [minor, patch]
+        patterns:
+          - "*"
+      other-dependencies:
+        update-types: [minor, patch]
+        patterns:
+          - "*"
+    ignore:
+      # SDK migrations must update Expo and its native modules together.
+      # Patch updates remain enabled and CI checks Expo's supported versions.
+      - dependency-name: "expo*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@expo/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jest-expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react-server-dom-webpack"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "@types/react*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react-native*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "@react-native*/*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # Stay on the Node 24 LTS types and the supported lint/compiler toolchain.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "daily"
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types: [minor, patch]
