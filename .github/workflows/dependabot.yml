@@ -1,7 +1,6 @@
-name: Auto merge Dependabot (minor & patch, squash)
+name: Dependabot auto-merge
 
-# This privileged workflow only reads metadata and calls GitHub's PR API.
-# Never check out or execute code from the pull request here; CI runs separately.
+# Do not check out PR code or run PR scripts in this privileged job.
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review]
@@ -19,50 +18,12 @@ jobs:
     if: >-
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.base.ref == github.event.repository.default_branch &&
       !github.event.pull_request.draft
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_PAT }}
-      GH_REPO: ${{ github.repository }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
-      - name: Check automation secret
-        id: auth
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo '::warning::Add DEPENDABOT_AUTOMERGE_PAT to repository Actions secrets to enable automatic approvals and squash merges.'
-            echo 'ready=false' >> "$GITHUB_OUTPUT"
-          else
-            echo 'ready=true' >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Fetch verified Dependabot metadata
-        if: steps.auth.outputs.ready == 'true'
-        id: metadata
-        uses: dependabot/fetch-metadata@v3
+      - name: Approve and queue eligible updates behind required CI
+        uses: andyklimczak/dependabot-auto-merge-action@5366b3363fcd27443f466fbd6d62abff6ca9d5a2 # v1.0.0
         with:
-          github-token: ${{ secrets.DEPENDABOT_AUTOMERGE_PAT }}
-
-      - name: Keep major or unclassified updates manual
-        if: >-
-          steps.auth.outputs.ready == 'true' &&
-          !contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)
-        run: |
-          if [ "$(gh pr view "$PR_NUMBER" --json autoMergeRequest --jq '.autoMergeRequest != null')" = true ]; then
-            gh pr merge "$PR_NUMBER" --disable-auto
-          fi
-          echo 'Major or unclassified update: manual review and merge required.' >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Approve minor and patch updates
-        if: >-
-          steps.auth.outputs.ready == 'true' &&
-          contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)
-        run: gh pr review "$PR_NUMBER" --approve
-
-      - name: Enable squash auto-merge after required CI succeeds
-        if: >-
-          steps.auth.outputs.ready == 'true' &&
-          contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)
-        run: gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$PR_HEAD_SHA"
+          token: ${{ secrets.DEPENDABOT_AUTOMERGE_PAT }}
+          max-update-type: minor
+          merge-method: squash
