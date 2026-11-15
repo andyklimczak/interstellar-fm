@@ -44,6 +44,12 @@ updates:
         patterns:
           - "*"
     ignore:
+      # These specific patch releases fail SDK 58's dependency validation.
+      # Revisit with the next SDK upgrade; other future patches remain eligible.
+      - dependency-name: "@react-native-community/slider"
+        versions: ["5.2.2"]
+      - dependency-name: "react-native-worklets"
+        versions: ["0.13.1"]
       # SDK migrations must update Expo and its native modules together.
       # Patch updates remain enabled and CI checks Expo's supported versions.
       - dependency-name: "expo*"
