@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
+  validate:
     if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
@@ -20,20 +20,22 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run lint
-        run: npm run lint
+      - name: Validate app
+        run: npm run check
+        env:
+          GITHUB_PAGES_BASE_PATH: /${{ github.event.repository.name }}
 
   auto-merge:
-    needs: lint
-    if: github.actor == 'dependabot[bot]' && needs.lint.result == 'success'
+    needs: validate
+    if: github.actor == 'dependabot[bot]' && needs.validate.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -41,18 +43,18 @@ jobs:
     steps:
       - name: Fetch Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Auto-approve safe updates
         if: |
-          contains(['version-update:semver-patch', 'version-update:semver-minor'], steps.metadata.outputs.update-type)
+          contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)
         uses: hmarr/auto-approve-action@v4
 
       - name: Enable auto-merge
         if: |
-          contains(['version-update:semver-patch', 'version-update:semver-minor'], steps.metadata.outputs.update-type)
+          contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}

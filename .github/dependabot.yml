@@ -5,6 +5,15 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
+    groups:
+      expo-and-react-native:
+        patterns:
+          - "expo*"
+          - "@expo/*"
+          - "react*"
+          - "@react-native*/*"
+          - "@types/react*"
+          - "jest-expo"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
