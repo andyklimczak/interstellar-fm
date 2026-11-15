@@ -1,5 +1,3 @@
-import '@testing-library/jest-native/extend-expect';
-
 jest.mock('expo-audio', () => {
   const listeners = new Set();
 
@@ -57,7 +55,7 @@ jest.mock('@expo/vector-icons', () => {
   const React = require('react');
   const { Text } = require('react-native');
 
-  const MockIcon = ({ name, ...rest }) =>
+  const MockIcon = ({ name, ...rest }: { name: string }) =>
     React.createElement(
       Text,
       {

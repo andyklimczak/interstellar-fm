@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-na
 import { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useTheme } from '@react-navigation/native';
+import { useAppTheme as useTheme } from '@/hooks/use-app-theme';
 import { Station } from '@/types/radio';
 
 interface Props {
@@ -120,14 +120,30 @@ export const StationListItem = ({ station, onPlay, onToggleSave, isSaved, isActi
         )}
       </View>
       <View style={styles.actions}>
-        <Pressable onPress={onToggleSave} hitSlop={8} style={styles.iconButton}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${isSaved ? 'Unsave' : 'Save'} ${station.name}`}
+          onPress={(event) => {
+            event.stopPropagation();
+            onToggleSave();
+          }}
+          hitSlop={8}
+          style={styles.iconButton}>
           <Ionicons
             name={isSaved ? 'heart' : 'heart-outline'}
             size={22}
             color={isSaved ? colors.primary : colors.text}
           />
         </Pressable>
-        <Pressable onPress={onPlay} hitSlop={8} style={styles.iconButton}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Play ${station.name}`}
+          onPress={(event) => {
+            event.stopPropagation();
+            onPlay();
+          }}
+          hitSlop={8}
+          style={styles.iconButton}>
           <Ionicons
             name={isActive ? 'musical-notes' : 'play'}
             size={22}

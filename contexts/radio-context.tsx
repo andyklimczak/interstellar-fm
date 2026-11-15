@@ -17,7 +17,7 @@ import {
   type AudioPlayer,
   type AudioStatus,
 } from 'expo-audio';
-import { Alert } from 'react-native';
+import { Platform } from 'react-native';
 
 import { registerStationClick } from '@/lib/radio-browser';
 import { Station } from '@/types/radio';
@@ -39,6 +39,7 @@ interface RadioContextValue {
   recentStations: Station[];
   isHydrated: boolean;
   status: PlaybackStatus;
+  playbackError: string | null;
   volume: number;
   playStation: (station: Station) => Promise<void>;
   togglePlayPause: () => Promise<void>;
@@ -140,7 +141,6 @@ const configureAudio = async () => {
       shouldPlayInBackground: true,
       shouldRouteThroughEarpiece: false,
       interruptionMode: 'doNotMix',
-      interruptionModeAndroid: 'doNotMix',
     });
   } catch (error) {
     console.warn('Failed to configure audio mode', error);
@@ -154,6 +154,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
   const [recentStations, setRecentStations] = useState<Station[]>([]);
   const [currentStation, setCurrentStation] = useState<Station | null>(null);
   const [status, setStatus] = useState<PlaybackStatus>('idle');
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [volume, setVolumeState] = useState(1);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -225,12 +226,19 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
   }, [clearLockScreenControls]);
 
   const handleStatusUpdate = useCallback((playbackStatus: AudioStatus) => {
-    if (!playbackStatus.isLoaded) {
+    if (playbackStatus.error) {
+      setPlaybackError('Unable to play this stream. Try another station or press play to retry.');
+      setStatus('paused');
+      return;
+    }
+
+    if (!playbackStatus.isLoaded || playbackStatus.isBuffering) {
       setStatus('loading');
       return;
     }
 
     if (playbackStatus.playing) {
+      setPlaybackError(null);
       setStatus('playing');
       return;
     }
@@ -308,8 +316,9 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
 
   const playStation = useCallback(
     async (station: Station) => {
-      if (!station.urlResolved) {
-        Alert.alert('Unavailable stream', 'This station does not have a playable stream URL.');
+      setPlaybackError(null);
+      if (!station.urlResolved || (Platform.OS === 'web' && !station.urlResolved.startsWith('https://'))) {
+        setPlaybackError('This station does not have a secure, playable stream URL. Try another station.');
         return;
       }
 
@@ -320,7 +329,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
           setStatus('playing');
           activateLockScreenControls(playerRef.current, station);
         } catch (error) {
-          Alert.alert('Playback failed', 'Unable to resume this station.');
+          setPlaybackError('Unable to resume this station. Try another station.');
           console.warn('Failed to resume playback', error);
         } finally {
           setIsBusy(false);
@@ -346,7 +355,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
         recordRecentStation(station);
       } catch (error) {
         console.error('Failed to start playback', error);
-        Alert.alert('Playback failed', 'Unable to start this stream right now.');
+        setPlaybackError('Unable to start this stream right now. Try another station.');
         setCurrentStation(null);
         setStatus('idle');
         detachPlayer();
@@ -372,6 +381,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
 
     try {
       setIsBusy(true);
+      setPlaybackError(null);
       const playbackStatus = player.currentStatus;
       if (!playbackStatus.isLoaded) {
         setStatus('loading');
@@ -379,7 +389,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
         return;
       }
 
-      if (playbackStatus.playing) {
+      if (player.playing) {
         player.pause();
         setStatus('paused');
       } else {
@@ -394,21 +404,11 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const stop = useCallback(async () => {
-    const player = playerRef.current;
-    if (!player) {
-      return;
-    }
-
-    try {
-      setIsBusy(true);
-      player.pause();
-      setStatus('paused');
-    } catch (error) {
-      console.warn('Failed to stop playback', error);
-    } finally {
-      setIsBusy(false);
-    }
-  }, []);
+    detachPlayer();
+    setCurrentStation(null);
+    setPlaybackError(null);
+    setStatus('idle');
+  }, [detachPlayer]);
 
   const setVolume = useCallback(
     async (value: number) => {
@@ -462,6 +462,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
       recentStations,
       isHydrated,
       status,
+      playbackError,
       volume,
       playStation,
       togglePlayPause,
@@ -478,6 +479,7 @@ export const RadioProvider = ({ children }: PropsWithChildren) => {
       recentStations,
       isHydrated,
       status,
+      playbackError,
       volume,
       playStation,
       togglePlayPause,

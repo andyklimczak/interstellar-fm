@@ -1,7 +1,7 @@
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@react-navigation/native';
+import { useAppTheme as useTheme } from '@/hooks/use-app-theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useRadio } from '@/contexts/radio-context';
@@ -9,10 +9,12 @@ import { useRadio } from '@/contexts/radio-context';
 export const BottomPlayer = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { currentStation, status, togglePlayPause, volume, setVolume, isBusy, stop } = useRadio();
+  const { currentStation, status, playbackError, togglePlayPause, volume, setVolume, isBusy, stop } = useRadio();
 
   if (!currentStation) {
-    return null;
+    return playbackError ? (
+      <Text accessibilityRole="alert" style={[styles.error, { color: colors.text }]}>{playbackError}</Text>
+    ) : null;
   }
 
   const isPlaying = status === 'playing';
@@ -28,6 +30,9 @@ export const BottomPlayer = () => {
           paddingBottom: Math.max(insets.bottom, 12),
         },
       ]}>
+      {playbackError && (
+        <Text accessibilityRole="alert" style={[styles.error, { color: colors.text }]}>{playbackError}</Text>
+      )}
       <View style={styles.headerRow}>
         <View style={styles.info}>
           <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
@@ -41,16 +46,20 @@ export const BottomPlayer = () => {
         </View>
         <View style={styles.controls}>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Stop playback"
             style={[styles.roundButton, { borderColor: colorAccent }]}
             onPress={stop}
             disabled={isBusy}>
             <Ionicons name="stop" size={18} color={colorAccent} />
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={isPlaying ? 'Pause playback' : 'Play stream'}
             style={[styles.roundButtonFilled, { backgroundColor: colorAccent }]}
             onPress={togglePlayPause}
             disabled={isBusy}>
-            {isBusy ? (
+            {isBusy || status === 'loading' ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Ionicons name={isPlaying ? 'pause' : 'play'} size={18} color="#fff" />
@@ -61,6 +70,7 @@ export const BottomPlayer = () => {
       <View style={styles.sliderRow}>
         <Ionicons name="volume-low" size={18} color={colors.text} />
         <Slider
+          accessibilityLabel="Volume"
           style={styles.slider}
           minimumValue={0}
           maximumValue={1}
@@ -77,6 +87,10 @@ export const BottomPlayer = () => {
 };
 
 const styles = StyleSheet.create({
+  error: {
+    padding: 12,
+    fontSize: 14,
+  },
   container: {
     paddingHorizontal: 16,
     paddingTop: 12,

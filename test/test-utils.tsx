@@ -1,6 +1,7 @@
 import { ReactElement } from 'react';
 import { render } from '@testing-library/react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { ThemeProvider } from 'expo-router';
+import { TomorrowLightTheme } from '@/constants/theme';
 
 import { RadioContext } from '@/contexts/radio-context';
 import { Station } from '@/types/radio';
@@ -15,6 +16,7 @@ const createBaseContextValue = (
   recentStations: [],
   isHydrated: true,
   status: 'idle',
+  playbackError: null,
   volume: 1,
   playStation: jest.fn(),
   togglePlayPause: jest.fn(),
@@ -33,9 +35,9 @@ export const renderWithRadioContext = (
 ) => {
   const value = createBaseContextValue(overrides);
   return render(
-    <NavigationContainer>
+    <ThemeProvider value={TomorrowLightTheme}>
       <RadioContext.Provider value={value}>{ui}</RadioContext.Provider>
-    </NavigationContainer>,
+    </ThemeProvider>,
   );
 };
 

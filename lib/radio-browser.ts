@@ -6,8 +6,7 @@ import { Station } from '@/types/radio';
 const RADIO_BROWSER_BASES = [
   'https://all.api.radio-browser.info/',
   'https://de1.api.radio-browser.info/',
-  'https://nl1.api.radio-browser.info/',
-  'https://us1.api.radio-browser.info/',
+  'https://de2.api.radio-browser.info/',
 ];
 
 type SearchSortField = 'name' | 'clickcount' | 'votes' | 'bitrate';
@@ -58,7 +57,12 @@ let cachedHost: string | null = null;
 
 const sanitizeStation = (station: RadioBrowserStation): Station | null => {
   const resolvedUrl = station.url_resolved || station.url;
-  if (!resolvedUrl) {
+  try {
+    const { protocol } = new URL(resolvedUrl);
+    if (protocol !== 'https:' && (Platform.OS === 'web' || protocol !== 'http:')) {
+      return null;
+    }
+  } catch {
     return null;
   }
 
@@ -112,6 +116,8 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
   let lastError: unknown;
 
   for (const host of hosts) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     try {
       const url = new URL(path.startsWith('/') ? path.slice(1) : path, host);
       appendParams(url, options.params);
@@ -125,6 +131,7 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
       const response = await fetch(url.toString(), {
         method: options.method ?? 'GET',
         headers,
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -136,6 +143,8 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
       return json;
     } catch (error) {
       lastError = error;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -169,7 +178,16 @@ export const searchStations = async (
 };
 
 export const fetchTopStations = async (limit = 30): Promise<Station[]> => {
-  const payload = await request<RadioBrowserStation[]>(`json/stations/topclick/${Math.max(1, limit)}`);
+  // Unlike /topclick, search supports filtering out mixed-content HTTP streams.
+  const payload = await request<RadioBrowserStation[]>('json/stations/search', {
+    params: {
+      limit: Math.max(1, limit),
+      order: 'clickcount',
+      reverse: true,
+      hidebroken: true,
+      is_https: true,
+    },
+  });
 
   return payload
     .filter((station) => station.lastcheckok === 1)

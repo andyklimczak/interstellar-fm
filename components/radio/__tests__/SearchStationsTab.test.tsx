@@ -26,7 +26,7 @@ describe('SearchStationsTab', () => {
     const topStations = [createStation({ stationuuid: 'featured', name: 'Featured Radio' })];
     mockedFetchTopStations.mockResolvedValue(topStations);
 
-    const { getByText } = renderWithRadioContext(<SearchStationsTab />);
+    const { getByText } = await renderWithRadioContext(<SearchStationsTab />);
 
     await waitFor(() => expect(mockedFetchTopStations).toHaveBeenCalled());
     await waitFor(() => expect(getByText('Popular right now')).toBeOnTheScreen());
@@ -38,10 +38,10 @@ describe('SearchStationsTab', () => {
     mockedFetchTopStations.mockResolvedValue([]);
     mockedSearchStations.mockResolvedValue(results);
 
-    const { getByPlaceholderText, getByText } = renderWithRadioContext(<SearchStationsTab />);
+    const { getByPlaceholderText, getByText } = await renderWithRadioContext(<SearchStationsTab />);
 
     const input = getByPlaceholderText('Search radio stations');
-    fireEvent.changeText(input, 'Jazz');
+    await fireEvent.changeText(input, 'Jazz');
 
     await act(async () => {
       jest.advanceTimersByTime(400);

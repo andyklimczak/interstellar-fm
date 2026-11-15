@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@react-navigation/native';
+import { useAppTheme as useTheme } from '@/hooks/use-app-theme';
 
 import { StationListItem } from '@/components/radio/StationListItem';
 import { useRadio } from '@/contexts/radio-context';
@@ -23,7 +23,7 @@ export const SearchStationsTab = () => {
   const [results, setResults] = useState<Station[]>([]);
   const [featuredStations, setFeaturedStations] = useState<Station[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [isLoadingFeatured, setIsLoadingFeatured] = useState(false);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [featuredError, setFeaturedError] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SearchSortField>('name');
@@ -45,7 +45,6 @@ export const SearchStationsTab = () => {
     let isCancelled = false;
 
     const loadFeatured = async () => {
-      setIsLoadingFeatured(true);
       try {
         const stations = await fetchTopStations(30);
         if (!isCancelled) {
@@ -74,14 +73,10 @@ export const SearchStationsTab = () => {
 
   useEffect(() => {
     if (trimmedQuery.length < 2) {
-      setResults([]);
-      setError(null);
-      setIsSearching(false);
       return;
     }
 
     let isCancelled = false;
-    setIsSearching(true);
 
     const timeout = setTimeout(async () => {
       try {
@@ -156,7 +151,12 @@ export const SearchStationsTab = () => {
           placeholder="Search radio stations"
           placeholderTextColor={`${colors.text}66`}
           value={query}
-          onChangeText={setQuery}
+          onChangeText={(value) => {
+            setQuery(value);
+            setResults([]);
+            setError(null);
+            setIsSearching(value.trim().length >= 2);
+          }}
           style={[styles.input, { color: colors.text }]}
           autoCapitalize="none"
           autoCorrect={false}
@@ -171,7 +171,12 @@ export const SearchStationsTab = () => {
             return (
               <Pressable
                 key={option.value}
-                onPress={() => setSortOrder(option.value)}
+                onPress={() => {
+                  if (sortOrder !== option.value) {
+                    setSortOrder(option.value);
+                    setIsSearching(true);
+                  }
+                }}
                 style={[
                   styles.sortChip,
                   {
@@ -234,8 +239,8 @@ export const SearchStationsTab = () => {
             isActive={currentStation?.stationuuid === item.stationuuid}
           />
         )}
-        ListEmptyComponent={listEmptyComponent}
-        ListHeaderComponent={listHeaderComponent}
+        ListEmptyComponent={listEmptyComponent ?? undefined}
+        ListHeaderComponent={listHeaderComponent ?? undefined}
       />
     </View>
   );

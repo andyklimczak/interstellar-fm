@@ -1,81 +1,68 @@
-import { withLayoutContext } from 'expo-router';
-import { useTheme } from '@react-navigation/native';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useSegments } from 'expo-router';
+import { useAppTheme as useTheme } from '@/hooks/use-app-theme';
+import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 import { BottomPlayer } from '@/components/radio/BottomPlayer';
 import { useRadio } from '@/contexts/radio-context';
 
-const { Navigator } = createMaterialTopTabNavigator();
-const Tabs = withLayoutContext(Navigator);
+const tabs = [
+  { name: 'saved', title: 'Saved', href: '/saved' },
+  { name: 'recent', title: 'Recent', href: '/recent' },
+  { name: 'search', title: 'Search', href: '/search' },
+] as const;
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const segments = useSegments();
   const { isHydrated } = useRadio();
-
-  if (!isHydrated) {
-    return (
-      <SafeAreaView
-        edges={['top', 'left', 'right']}
-        style={[styles.safeArea, { backgroundColor: colors.background }]}
-      >
-        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView
       edges={['top', 'left', 'right']}
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <View style={styles.container}>
-        <View style={styles.tabsWrapper}>
-          <Tabs
-            screenOptions={{
-              tabBarActiveTintColor: colors.text,
-              tabBarInactiveTintColor: `${colors.text}99`,
-              tabBarIndicatorStyle: { backgroundColor: colors.primary, height: 3, borderRadius: 3 },
-              tabBarStyle: {
-                backgroundColor: 'transparent',
-                elevation: 0,
-                shadowOpacity: 0,
-              },
-              tabBarLabelStyle: {
-                fontSize: 16,
-                fontWeight: '600',
-                textTransform: 'none',
-              },
-              tabBarPressColor: `${colors.primary}33`,
-            }}
-          >
-            <Tabs.Screen name="saved" options={{ title: 'Saved' }} />
-            <Tabs.Screen name="recent" options={{ title: 'Recent' }} />
-            <Tabs.Screen name="search" options={{ title: 'Search' }} />
+      {isHydrated ? (
+        <View style={styles.container}>
+          <Tabs style={styles.container}>
+            <TabList style={styles.tabList} accessibilityRole="tablist">
+              {tabs.map(({ name, title, href }) => {
+                const selected = segments.at(-1) === name;
+                return (
+                  <TabTrigger
+                    key={name}
+                    name={name}
+                    href={href}
+                    accessibilityRole="tab"
+                    accessibilityLabel={title}
+                    aria-selected={selected}
+                    style={[styles.tab, { borderBottomColor: selected ? colors.primary : 'transparent' }]}
+                  >
+                    <Text style={[styles.label, { color: selected ? colors.text : `${colors.text}99` }]}>
+                      {title}
+                    </Text>
+                  </TabTrigger>
+                );
+              })}
+            </TabList>
+            <TabSlot style={styles.container} />
           </Tabs>
+          <BottomPlayer />
         </View>
-        <BottomPlayer />
-      </View>
+      ) : (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  tabsWrapper: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: { flex: 1 },
+  tabList: { flexDirection: 'row' },
+  tab: { flex: 1, paddingVertical: 16, alignItems: 'center', borderBottomWidth: 3 },
+  label: { fontSize: 16, fontWeight: '600' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

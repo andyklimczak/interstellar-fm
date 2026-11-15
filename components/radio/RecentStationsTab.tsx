@@ -1,5 +1,5 @@
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useAppTheme as useTheme } from '@/hooks/use-app-theme';
 
 import { StationListItem } from '@/components/radio/StationListItem';
 import { useRadio } from '@/contexts/radio-context';

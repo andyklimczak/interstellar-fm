@@ -2,7 +2,7 @@
  * Tomorrow color palettes (light and night variants).
  */
 
-import { DarkTheme as NavigationDarkTheme, DefaultTheme as NavigationDefaultTheme, Theme } from '@react-navigation/native';
+import { DarkTheme as NavigationDarkTheme, DefaultTheme as NavigationDefaultTheme, Theme } from 'expo-router';
 import { Platform } from 'react-native';
 
 export const lightPalette = {
@@ -54,7 +54,11 @@ export const Colors = {
   },
 };
 
-export const TomorrowLightTheme: Theme = {
+export type AppTheme = Omit<Theme, 'colors'> & {
+  colors: Record<keyof Theme['colors'], string>;
+};
+
+export const TomorrowLightTheme: AppTheme = {
   ...NavigationDefaultTheme,
   colors: {
     ...NavigationDefaultTheme.colors,
@@ -67,7 +71,7 @@ export const TomorrowLightTheme: Theme = {
   },
 };
 
-export const TomorrowDarkTheme: Theme = {
+export const TomorrowDarkTheme: AppTheme = {
   ...NavigationDarkTheme,
   colors: {
     ...NavigationDarkTheme.colors,

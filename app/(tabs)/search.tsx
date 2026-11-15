@@ -1,5 +1,5 @@
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useAppTheme as useTheme } from '@/hooks/use-app-theme';
 
 import { SearchStationsTab } from '@/components/radio/SearchStationsTab';
 import { useRadio } from '@/contexts/radio-context';
