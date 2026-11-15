@@ -3,7 +3,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 
 const root = resolve('dist');
-const basePath = '/interstellar-fm';
+const basePath = (process.env.GITHUB_PAGES_BASE_PATH ?? '/interstellar-fm').replace(/\/$/, '');
 const contentTypes = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
   '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon',

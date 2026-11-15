@@ -54,7 +54,7 @@ test.beforeEach(async ({ page }) => {
   }));
 });
 
-test('project root, tabs, and direct route reloads load all assets', async ({ page }) => {
+test('project root, tabs, and direct route reloads load all assets', async ({ page, baseURL }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('response', (response) => {
@@ -63,11 +63,11 @@ test('project root, tabs, and direct route reloads load all assets', async ({ pa
     }
   });
   await page.goto('./');
-  await expect(page).toHaveURL(/\/interstellar-fm\/saved$/);
+  await expect(page).toHaveURL(new URL('saved', baseURL).href);
   await expect(page.getByText('No saved stations yet')).toBeVisible();
   for (const tab of ['Search', 'Recent', 'Saved']) {
     await page.getByRole('tab', { name: tab }).click();
-    await expect(page).toHaveURL(new RegExp(`/interstellar-fm/${tab.toLowerCase()}$`));
+    await expect(page).toHaveURL(new URL(tab.toLowerCase(), baseURL).href);
     await page.reload();
     await expect(page.getByRole('tab', { name: tab })).toHaveAttribute('aria-selected', 'true');
   }
