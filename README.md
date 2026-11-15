@@ -75,9 +75,7 @@ A plain `npm run build:web` exports for the domain root. For a user site or cust
 
 ### Dependabot automatic squash merges
 
-`.github/workflows/dependabot.yml` calls the shared [dependabot-auto-merge-action](https://github.com/andyklimczak/dependabot-auto-merge-action), pinned to a reviewed release commit, using the same **`DEPENDABOT_AUTOMERGE_PAT`** secret name as `andy-django-boilerplate`. With `max-update-type: minor`, verified Dependabot PRs are approved and queued for squash auto-merge only for **minor/patch** updates. Major or unclassified updates require manual review. Auto-merge never bypasses required CI.
-
-To change the policy, edit the caller's `max-update-type`: `none` disables auto-merge for processed PRs, `patch` allows patches only, `minor` allows patches and minors, and `major` allows all three. The shared action also supports `approve`, `merge-method`, and `dry-run`; see its README for details. Dependency schedules/exclusions and required CI remain configured per repository.
+`.github/workflows/dependabot.yml` uses the same **`DEPENDABOT_AUTOMERGE_PAT`** secret name as `andy-django-boilerplate`. Verified Dependabot PRs from this repository are approved and queued for squash auto-merge only for **minor/patch** updates. Major or unclassified updates require manual review. Auto-merge never bypasses required CI.
 
 The workflow uses `pull_request_target` so its definition comes from the trusted default branch. It never checks out PR code, installs PR dependencies, or runs PR scripts with the token. All code validation runs separately in the unprivileged CI workflow.
 
