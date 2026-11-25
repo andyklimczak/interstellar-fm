@@ -2,7 +2,7 @@
 
 Discover and stream internet radio, save favorite stations, and revisit recent listening history. Built with Expo SDK 58, React Native, Expo Router, and [Radio Browser](https://api.radio-browser.info/).
 
-**Website:** https://andyklimczak.github.io/interstellar-fm/
+**Website:** https://interstellarfm.com/
 
 ## Requirements
 
@@ -32,11 +32,11 @@ npm run check                 # lint, TypeScript, unit tests, root-path web expo
 npx expo-doctor               # SDK/configuration compatibility checks
 ```
 
-Browser tests run against the **production static export**, served like a Pages project site (no SPA fallback). They cover asset loading, tab navigation, direct route reloads, search, saved/recent persistence, real audio decoding and controls, and playback errors. API responses and audio are fixtures, so tests do not depend on external station availability.
+Browser tests run against the **production static export**, served like GitHub Pages (no SPA fallback). They cover asset loading, tab navigation, direct route reloads, search, saved/recent persistence, real audio decoding and controls, and playback errors. API responses and audio are fixtures, so tests do not depend on external station availability.
 
 ```bash
 npx playwright install chromium
-GITHUB_PAGES_BASE_PATH=/interstellar-fm npm run build:web
+npm run build:web
 npm run test:web
 ```
 
@@ -48,21 +48,21 @@ Pages is already configured to use **GitHub Actions** in this repository. No `gh
 
 1. Push to `master` (or run **Actions → Deploy Web → Run workflow**).
 2. `.github/workflows/deploy-web.yml` installs the lockfile with Node 24, runs lint/types/unit tests, and calls `actions/configure-pages`.
-3. The build receives Pages' `base_path` as `GITHUB_PAGES_BASE_PATH`. `app.config.ts` applies it as Expo's `experiments.baseUrl`, so scripts, fonts, images, and navigation resolve under `/interstellar-fm/`, not the domain root.
+3. The build receives Pages' `base_path` as `GITHUB_PAGES_BASE_PATH`. `app.config.ts` applies it as Expo's `experiments.baseUrl`. It is empty for `interstellarfm.com`, so scripts, fonts, images, and navigation resolve at the domain root.
 4. Browser tests validate that exact export before `dist/` is uploaded and deployed with the official Pages actions.
 5. The deployment job publishes its live URL in the `github-pages` environment.
 
-Pull requests also run the production build and browser tests in `.github/workflows/ci.yml`.
+Pull requests also build and test a root-path export in `.github/workflows/ci.yml`. After changing the Pages custom domain, run **Deploy Web** again: changing the domain does not rebuild the asset URLs in the published export.
 
 ### Preview the Pages build locally
 
 ```bash
-GITHUB_PAGES_BASE_PATH=/interstellar-fm npm run build:web
+npm run build:web
 node test/web/serve.mjs
-# Open http://127.0.0.1:4173/interstellar-fm/
+# Open http://127.0.0.1:4173/
 ```
 
-A plain `npm run build:web` exports for the domain root. For a user site or custom domain, the deployment workflow obtains the appropriate base path automatically. To preview a root-path export with the same server, use `GITHUB_PAGES_BASE_PATH= node test/web/serve.mjs`.
+To preview a project site without a custom domain, set `GITHUB_PAGES_BASE_PATH=/interstellar-fm` for both the build and the preview or test command.
 
 ## Dependency and security maintenance
 

@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-const basePath = (process.env.GITHUB_PAGES_BASE_PATH ?? '/interstellar-fm').replace(/\/$/, '');
+const basePath = (process.env.GITHUB_PAGES_BASE_PATH ?? '').replace(/\/$/, '');
 const baseURL = `http://127.0.0.1:4173${basePath}/`;
 
 export default defineConfig({

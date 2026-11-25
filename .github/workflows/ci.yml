@@ -37,15 +37,11 @@ jobs:
       - name: Run tests
         run: npm test -- --runInBand
 
-      - name: Build web bundle for GitHub Pages
+      - name: Build web bundle for the custom domain root
         run: npm run build:web
-        env:
-          GITHUB_PAGES_BASE_PATH: /${{ github.event.repository.name }}
 
       - name: Install browser
         run: npx playwright install --with-deps chromium
 
       - name: Test exported site
         run: npm run test:web
-        env:
-          GITHUB_PAGES_BASE_PATH: /${{ github.event.repository.name }}

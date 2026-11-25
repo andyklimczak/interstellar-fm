@@ -3,14 +3,14 @@ import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 
 const root = resolve('dist');
-const basePath = (process.env.GITHUB_PAGES_BASE_PATH ?? '/interstellar-fm').replace(/\/$/, '');
+const basePath = (process.env.GITHUB_PAGES_BASE_PATH ?? '').replace(/\/$/, '');
 const contentTypes = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
   '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon',
   '.ttf': 'font/ttf', '.woff': 'font/woff', '.woff2': 'font/woff2',
 };
 
-// Emulate Pages' project subpath and extensionless HTML, without an SPA fallback.
+// Emulate Pages' base path and extensionless HTML, without an SPA fallback.
 createServer(async (request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
   if (!pathname.startsWith(`${basePath}/`)) {
