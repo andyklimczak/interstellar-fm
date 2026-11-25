@@ -54,7 +54,7 @@ test.beforeEach(async ({ page }) => {
   }));
 });
 
-test('project root, tabs, and direct route reloads load all assets', async ({ page, baseURL }) => {
+test('site root, tabs, and direct route reloads load all assets', async ({ page, baseURL }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('response', (response) => {
