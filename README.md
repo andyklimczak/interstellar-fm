@@ -4,6 +4,8 @@ Discover and stream internet radio, save favorite stations, and revisit recent l
 
 **Website:** https://interstellarfm.com/
 
+In the Search tab, use **Sort by** to order stations by Name, Clicks, Trend, Votes, or Bitrate. Trend ranks stations by how much their clicks have increased over the last two days.
+
 ## Requirements
 
 - Node.js **24 LTS** recommended (`nvm use` reads `.nvmrc`). Expo also supports Node 22.13+ and 26+ within the ranges in `package.json`.

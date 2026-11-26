@@ -44,11 +44,21 @@ it('requests secure popular stations and sanitizes broken or invalid results', a
   });
 });
 
-it('trims search queries and sorts popular results in descending order', async () => {
+it.each([
+  ['name', 'false'],
+  ['clickcount', 'true'],
+  ['clicktrend', 'true'],
+  ['votes', 'true'],
+  ['bitrate', 'true'],
+] as const)('uses the requested %s order for search and browse', async (order, reverse) => {
   mockFetch.mockResolvedValue(response([rawStation]));
-  await searchStations('  Jazz  ', { order: 'votes' });
-  const url = new URL(mockFetch.mock.calls[0][0]);
-  expect(Object.fromEntries(url.searchParams)).toMatchObject({ name: 'Jazz', order: 'votes', reverse: 'true' });
+  await searchStations('  Jazz  ', { order });
+  await fetchTopStations(30, order);
+
+  const [search, browse] = mockFetch.mock.calls.map(([url]) => new URL(url).searchParams);
+  expect(Object.fromEntries(search)).toMatchObject({ name: 'Jazz', order, reverse });
+  expect(Object.fromEntries(browse)).toMatchObject({ limit: '30', order, reverse });
+  expect(browse.has('name')).toBe(false);
 });
 
 it('retries another mirror when a server fails', async () => {

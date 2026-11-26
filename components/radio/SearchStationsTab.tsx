@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -16,6 +17,14 @@ import { useRadio } from '@/contexts/radio-context';
 import { fetchTopStations, searchStations, type SearchSortField } from '@/lib/radio-browser';
 import { Station } from '@/types/radio';
 
+const sortOptions: { label: string; value: SearchSortField }[] = [
+  { label: 'Name', value: 'name' },
+  { label: 'Clicks', value: 'clickcount' },
+  { label: 'Trend', value: 'clicktrend' },
+  { label: 'Votes', value: 'votes' },
+  { label: 'Bitrate', value: 'bitrate' },
+];
+
 export const SearchStationsTab = () => {
   const { colors } = useTheme();
   const { playStation, currentStation, saveStation, removeStation, isStationSaved } = useRadio();
@@ -26,27 +35,34 @@ export const SearchStationsTab = () => {
   const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [featuredError, setFeaturedError] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<SearchSortField>('name');
+  const [searchOrder, setSearchOrder] = useState<SearchSortField>('name');
+  const [browseOrder, setBrowseOrder] = useState<SearchSortField>('clickcount');
 
   const trimmedQuery = query.trim();
   const usingSearch = trimmedQuery.length >= 2;
+  const sortOrder = usingSearch ? searchOrder : browseOrder;
 
-  const sortOptions = useMemo(
-    () => [
-      { label: 'Name', value: 'name' as const },
-      { label: 'Popularity', value: 'clickcount' as const },
-      { label: 'Votes', value: 'votes' as const },
-      { label: 'Bitrate', value: 'bitrate' as const },
-    ],
-    [],
-  );
+  const changeSortOrder = (order: SearchSortField) => {
+    if (order === sortOrder) return;
+    if (usingSearch) {
+      setSearchOrder(order);
+      setResults([]);
+      setError(null);
+      setIsSearching(true);
+    } else {
+      setBrowseOrder(order);
+      setFeaturedStations([]);
+      setFeaturedError(null);
+      setIsLoadingFeatured(true);
+    }
+  };
 
   useEffect(() => {
     let isCancelled = false;
 
     const loadFeatured = async () => {
       try {
-        const stations = await fetchTopStations(30);
+        const stations = await fetchTopStations(30, browseOrder);
         if (!isCancelled) {
           setFeaturedStations(stations);
           setFeaturedError(null);
@@ -54,7 +70,7 @@ export const SearchStationsTab = () => {
       } catch (error) {
         console.warn('Failed to load featured stations', error);
         if (!isCancelled) {
-          setFeaturedError('Unable to load popular stations right now.');
+          setFeaturedError('Unable to load stations right now.');
           setFeaturedStations([]);
         }
       } finally {
@@ -69,7 +85,7 @@ export const SearchStationsTab = () => {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [browseOrder]);
 
   useEffect(() => {
     if (trimmedQuery.length < 2) {
@@ -80,7 +96,7 @@ export const SearchStationsTab = () => {
 
     const timeout = setTimeout(async () => {
       try {
-        const stations = await searchStations(trimmedQuery, { order: sortOrder });
+        const stations = await searchStations(trimmedQuery, { order: searchOrder });
         if (isCancelled) {
           return;
         }
@@ -104,7 +120,7 @@ export const SearchStationsTab = () => {
       isCancelled = true;
       clearTimeout(timeout);
     };
-  }, [trimmedQuery, sortOrder]);
+  }, [trimmedQuery, searchOrder]);
 
   const handleToggleSave = async (station: Station) => {
     if (isStationSaved(station.stationuuid)) {
@@ -132,7 +148,7 @@ export const SearchStationsTab = () => {
         <View style={styles.emptyState}>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>Nothing to show yet</Text>
           <Text style={[styles.emptySubtitle, { color: colors.text }]}>
-            Popular stations will appear here once we can reach Radio Browser.
+            Stations will appear here once we can reach Radio Browser.
           </Text>
         </View>
         )
@@ -140,7 +156,9 @@ export const SearchStationsTab = () => {
 
   const listHeaderComponent =
     !usingSearch && dataSource.length > 0 ? (
-      <Text style={[styles.featuredTitle, { color: colors.text }]}>Popular right now</Text>
+      <Text style={[styles.featuredTitle, { color: colors.text }]}>
+        {browseOrder === 'clickcount' ? 'Popular right now' : 'Browse stations'}
+      </Text>
     ) : null;
 
   return (
@@ -153,9 +171,12 @@ export const SearchStationsTab = () => {
           value={query}
           onChangeText={(value) => {
             setQuery(value);
-            setResults([]);
-            setError(null);
-            setIsSearching(value.trim().length >= 2);
+            const nextQuery = value.trim();
+            if (nextQuery !== trimmedQuery) {
+              setResults([]);
+              setError(null);
+              setIsSearching(nextQuery.length >= 2);
+            }
           }}
           style={[styles.input, { color: colors.text }]}
           autoCapitalize="none"
@@ -164,38 +185,31 @@ export const SearchStationsTab = () => {
         />
       </View>
 
-      {usingSearch && (
-        <View style={styles.sortRow}>
-          {sortOptions.map((option) => {
-            const isActive = sortOrder === option.value;
-            return (
-              <Pressable
-                key={option.value}
-                onPress={() => {
-                  if (sortOrder !== option.value) {
-                    setSortOrder(option.value);
-                    setIsSearching(true);
-                  }
-                }}
-                style={[
-                  styles.sortChip,
-                  {
-                    backgroundColor: isActive ? colors.primary : colors.card,
-                    borderColor: isActive ? colors.primary : colors.border,
-                  },
-                ]}>
-                <Text
-                  style={[
-                    styles.sortChipText,
-                    { color: isActive ? '#fff' : colors.text },
-                  ]}>
-                  {option.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
+      <View style={styles.sortRow}>
+        <Text style={[styles.sortLabel, { color: colors.text }]}>Sort by</Text>
+        {sortOptions.map(({ label, value }) => {
+          const isActive = sortOrder === value;
+          return (
+            <Pressable
+              key={value}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isActive }}
+              {...(Platform.OS === 'web' ? { 'aria-pressed': isActive } : {})}
+              onPress={() => changeSortOrder(value)}
+              style={[
+                styles.sortChip,
+                {
+                  backgroundColor: isActive ? colors.primary : colors.card,
+                  borderColor: isActive ? colors.primary : colors.border,
+                },
+              ]}>
+              <Text style={[styles.sortChipText, { color: isActive ? '#fff' : colors.text }]}>
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
 
       {isSearching && usingSearch && (
         <View style={styles.loadingRow}>
@@ -213,7 +227,7 @@ export const SearchStationsTab = () => {
       {!usingSearch && isLoadingFeatured && (
         <View style={styles.loadingRow}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>Loading popular stations…</Text>
+          <Text style={[styles.loadingText, { color: colors.text }]}>Loading stations…</Text>
         </View>
       )}
 
@@ -268,8 +282,12 @@ const styles = StyleSheet.create({
   sortRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 8,
     marginTop: 12,
+  },
+  sortLabel: {
+    fontSize: 14,
   },
   sortChip: {
     paddingHorizontal: 12,

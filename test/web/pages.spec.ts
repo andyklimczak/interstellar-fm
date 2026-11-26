@@ -74,6 +74,45 @@ test('site root, tabs, and direct route reloads load all assets', async ({ page,
   expect(errors).toEqual([]);
 });
 
+test('station sorting works before and during a search', async ({ page }) => {
+  const other = { ...station, stationuuid: 'other-station', name: 'Pulsar Jazz' };
+  await page.route('https://*.api.radio-browser.info/**', (route) => {
+    const order = new URL(route.request().url()).searchParams.get('order');
+    return route.fulfill({ json: order === 'clicktrend' ? [other, station] : [station, other] });
+  });
+
+  const waitForSort = (order: string, name: string | null) => page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return url.pathname === '/json/stations/search' && response.ok() &&
+      url.searchParams.get('order') === order && url.searchParams.get('name') === name;
+  });
+  const sort = (label: string) => page.getByRole('button', { name: label, exact: true });
+  const stationNames = page.getByRole('button', { name: /^Play (Cosmic|Pulsar) Jazz$/ });
+
+  await page.goto('search');
+  await expect(sort('Clicks')).toHaveAttribute('aria-pressed', 'true');
+  await sort('Trend').focus();
+  await sort('Trend').press('Space');
+  await expect(sort('Trend')).toHaveAttribute('aria-pressed', 'true');
+  await expect(stationNames.first()).toHaveAccessibleName('Play Pulsar Jazz');
+
+  await Promise.all([
+    waitForSort('name', 'Jazz'),
+    page.getByPlaceholder('Search radio stations').fill('Jazz'),
+  ]);
+  await expect(sort('Name')).toHaveAttribute('aria-pressed', 'true');
+
+  for (const [label, order] of [['Clicks', 'clickcount'], ['Trend', 'clicktrend'], ['Votes', 'votes'], ['Name', 'name']]) {
+    await Promise.all([waitForSort(order, 'Jazz'), sort(label).click()]);
+    await expect(sort(label)).toHaveAttribute('aria-pressed', 'true');
+    await expect(stationNames.first()).toHaveAccessibleName(order === 'clicktrend' ? 'Play Pulsar Jazz' : 'Play Cosmic Jazz');
+  }
+
+  await page.getByPlaceholder('Search radio stations').clear();
+  await expect(sort('Trend')).toHaveAttribute('aria-pressed', 'true');
+  await expect(stationNames.first()).toHaveAccessibleName('Play Pulsar Jazz');
+});
+
 test('search, saving, audio controls, and history work across reloads', async ({ page }) => {
   await page.goto('search');
   await page.getByPlaceholder('Search radio stations').fill('Cosmic');
