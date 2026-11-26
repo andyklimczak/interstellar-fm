@@ -9,7 +9,7 @@ const RADIO_BROWSER_BASES = [
   'https://de2.api.radio-browser.info/',
 ];
 
-type SearchSortField = 'name' | 'clickcount' | 'votes' | 'bitrate';
+type SearchSortField = 'name' | 'clickcount' | 'clicktrend' | 'votes' | 'bitrate';
 
 interface RadioBrowserStation {
   stationuuid: string;
@@ -41,8 +41,8 @@ interface SearchStationsOptions {
   order?: SearchSortField;
 }
 
-const shouldReverseOrder = (order: SearchSortField) =>
-  order === 'clickcount' || order === 'votes' || order === 'bitrate';
+// Names are alphabetical; numeric rankings put the highest values first.
+const shouldReverseOrder = (order: SearchSortField) => order !== 'name';
 
 const getAppVersion = () => {
   const expoConfig = Constants.expoConfig ?? (Constants as unknown as { manifest?: { version?: string } }).manifest;
@@ -159,13 +159,12 @@ export const searchStations = async (
     return [];
   }
 
-  const selectedOrder = order ?? 'name';
   const payload = await request<RadioBrowserStation[]>('json/stations/search', {
     params: {
       name: query.trim(),
       limit,
-      order: selectedOrder,
-      reverse: shouldReverseOrder(selectedOrder),
+      order,
+      reverse: shouldReverseOrder(order),
       hidebroken: true,
       is_https: true,
     },
@@ -177,13 +176,16 @@ export const searchStations = async (
     .filter((station): station is Station => station !== null);
 };
 
-export const fetchTopStations = async (limit = 30): Promise<Station[]> => {
+export const fetchTopStations = async (
+  limit = 30,
+  order: SearchSortField = 'clickcount',
+): Promise<Station[]> => {
   // Unlike /topclick, search supports filtering out mixed-content HTTP streams.
   const payload = await request<RadioBrowserStation[]>('json/stations/search', {
     params: {
       limit: Math.max(1, limit),
-      order: 'clickcount',
-      reverse: true,
+      order,
+      reverse: shouldReverseOrder(order),
       hidebroken: true,
       is_https: true,
     },
